@@ -1,6 +1,6 @@
 {
   "name": "poly-roots",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Find all roots of a polynomial using the Jenkins-Traub method",
   "main": "index.js",
   "author": "Ricky Reusser",
