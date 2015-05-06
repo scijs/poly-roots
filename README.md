@@ -1,6 +1,8 @@
 # poly-roots
 =====================
 
+[![Build Status](https://travis-ci.org/scijs/poly-roots.svg?branch=master)](https://travis-ci.org/scijs/poly-roots.fury.io/js/poly-roots.svg)](http://badge.fury.io/js/poly-roots)
+
 Find all [roots](http://en.wikipedia.org/wiki/Root_of_a_function) of a [polynomial](http://en.wikipedia.org/wiki/Polynomial) using the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm). In other words, it [factorizes the polynomial](http://en.wikipedia.org/wiki/Factorization_of_polynomials) over the complex numbers.
 
 ## Introduction
@@ -23,6 +25,7 @@ It uses the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93
 - It's been translated by hand. Probably error prone.
 - The convergence criteria need a bit of work. I glossed over a couple subroutines that juggle some operations in order to prevent underflow errors, so I suspect the error estimates relative to machine epsilon aren't stricly accurate. I feel like it's losing a bit more precision than I'd expect though.
 - It can maybe be translated better and more effectively via f2c + emscripten.
+- The speed can be cut in half for polynomials with real coefficients by using the [rpoly.f90](http://jblevins.org/mirror/amiller/rpoly.f90) variant
 
 ## Usage
 
