@@ -1,5 +1,4 @@
-var ndarray = require('ndarray'),
-    test = require('tape'),
+var test = require('tape'),
     cpoly = require('../index.js');
 
 // Search epected real/imag for observed real/imag pairs:
