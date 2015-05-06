@@ -21,7 +21,7 @@ It uses the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93
 
 **The bad**:
 - It's been translated by hand. Probably error prone.
-- The convergence criteria need a bit of work. I glossed over a few subroutines that juggle some numbers in order to prevent underflow errors, so I suspect the error estimates relative to machine epsilon aren't stricly accurate.
+- The convergence criteria need a bit of work. I glossed over a couple subroutines that juggle some operations in order to prevent underflow errors, so I suspect the error estimates relative to machine epsilon aren't stricly accurate. I feel like it's losing a bit more precision than I'd expect though.
 - It can maybe be translated better and more effectively via f2c + emscripten.
 
 ## Usage

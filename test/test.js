@@ -55,8 +55,38 @@ test("factor z^2 + 1", function(t) {
 });
 
 test("factor z^3 - 4z^2 + z + 6", function(t) {
+  // Calculate roots of
+  //                                3      2
+  //   (z - 3) (z - 2) (z + 1)  =  z  - 4 z  + z + 6
+  //
+  var a_r = new Float64Array([1,-4, 1, 6]);
 
-  //t.equals(deriv([1,1,1,1]).join(), [1,2,3].join())
+  var roots = cpoly( a_r );
+
+  assertContainsCloseTo( t, [3,2,-1],[0,0,0], roots[0],roots[1], 1e-13 );
+
+  t.end();
+});
+
+test("factor (z-1) * (z+1) * (z + 1 + 1e-4i) * (z + 1 - 1e-4i)",function(t) {
+  // Calculate roots of:
+  //
+  // (z - 1) * (z + 1 + 1e-4i) * (z + 1 - 1e-4i) * (z + 1)  =
+  //
+  //     4      3                        2
+  //    x  + 2 x  + 9.99999993922529e-9 x  - 2 x - 1.00000001
+  //
+
+  var a_r = new Float64Array([1, 2, 9.99999993922529e-9, -2, -1.00000001 ]);
+
+  var roots = cpoly( a_r );
+
+  assertContainsCloseTo( t, [1, -1, -1, -1],[0, 1e-4, -1e-4, 0], roots[0],roots[1], 1e-7 );
+
+  t.end();
+});
+
+test("factor z^3 - 4z^2 + z + 6", function(t) {
   //
   // Calculate roots of
   //                                3      2
@@ -72,8 +102,6 @@ test("factor z^3 - 4z^2 + z + 6", function(t) {
 });
 
 test("factor z^3 - (4 + i)z^2 + (1 + i)z + (6 + 2i)", function(t) {
-
-  //t.equals(deriv([1,1,1,1]).join(), [1,2,3].join())
   //
   // Calculate roots of
   //                                    3            2
