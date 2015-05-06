@@ -129,7 +129,7 @@ test("factor (z-1)*(z-2)*(z-3)*(z-4)*(z-5)*(z-6)*(z-7)*(z-8)*(z-9)*(z-10)",funct
   var rr = [1,2,3,4,5,6,7,8,9,10];
   var ri = [0,0,0,0,0,0,0,0,0,0];
 
-  assertContainsCloseTo( t, rr, ri, roots[0], roots[1], 1e-10 );
+  assertContainsCloseTo( t, rr, ri, roots[0], roots[1], 1e-9 );
 
   t.end();
 });
