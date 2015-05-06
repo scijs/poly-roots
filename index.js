@@ -487,7 +487,7 @@ var cpoly = function cpoly ( opr, opi ) {
       noshft(5, nn, hr, hi, pr, pi);
 
       // Inner loop to select a shift
-      for(cnt2=1; cnt2<9; cnt2++) {
+      for(cnt2=0; cnt2<9; cnt2++) {
         //console.log("BEGIN INNER LOOP");
 
         // rotate shift angle xx and yy:
