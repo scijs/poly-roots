@@ -1,0 +1,29 @@
+{
+  "name": "poly-deflate",
+  "version": "0.0.0",
+  "description": "Factor out a root to deflate a polynomial",
+  "main": "index.js",
+  "author": "Ricky Reusser",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "scripts": {
+    "test": "node test/**"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/scijs/poly-deflate.git"
+  },
+  "keywords": [
+    "polynomial",
+    "scijs",
+    "calculus",
+    "algebra",
+    "math"
+  ],
+  "dependencies": {
+    "ndarray": "^1.0.16"
+  },
+  "devDependencies": {
+    "tape": "^4.0.0"
+  }
+}
