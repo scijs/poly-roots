@@ -13,7 +13,7 @@ It uses the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93
 
 **The good**:
 
-- It's pretty fast — maybe [a few times faster than the companion matrix method](http://eprints.maths.ox.ac.uk/16/1/mekwi.pdf)
+- It's reasonably fast — maybe [a few times faster than the companion matrix method](http://eprints.maths.ox.ac.uk/16/1/mekwi.pdf)
 - It's numerically stable
 - Memory usage is linear
 - It benefits from the experimentation of the people who originally sat down and came up with a great implementation
