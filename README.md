@@ -1,7 +1,7 @@
 # poly-roots
 =====================
 
-[![Build Status](https://travis-ci.org/scijs/poly-roots.svg?branch=master)](https://travis-ci.org/scijs/poly-roots.fury.io/js/poly-roots.svg)](http://badge.fury.io/js/poly-roots)
+[![Build Status](https://travis-ci.org/scijs/poly-roots.svg?branch=master)](https://travis-ci.org/scijs/poly-roots) [![npm version](https://badge.fury.io/js/poly-roots.svg)](http://badge.fury.io/js/poly-roots)  [![Dependency Status](https://david-dm.org/scijs/poly-roots.svg)](https://david-dm.org/scijs/poly-roots)
 
 Find all [roots](http://en.wikipedia.org/wiki/Root_of_a_function) of a [polynomial](http://en.wikipedia.org/wiki/Polynomial) using the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm). In other words, it [factorizes the polynomial](http://en.wikipedia.org/wiki/Factorization_of_polynomials) over the complex numbers.
 
