@@ -1,6 +1,6 @@
-"use strict"
+'use strict';
 
-function show(a,b) {
+/*function show(a,b) {
   var i,nums;
   nums = [];
   for(i=0; i<a.length; i++) {
@@ -40,20 +40,395 @@ function showPolyPython(n,a,b) {
     }
     return '[' + terms.join(', ') + ']';
   }
+}*/
+
+function polyev ( nn, sr, si, pr, pi, qr, qi, pvri ) {
+  //
+  // Evaluates a polynomial P at s by the Horner recurrence, placing the
+  // partial sums in Q and the computed value in pvri, which for JS is
+  // obviously an array since we can't pass by ref.
+  //
+  var i,t,pvr,pvi;
+
+  pvr = qr[0] = pr[0];
+  pvi = qi[0] = pi[0];
+
+  for(i=1; i<nn; i++) {
+    t = pvr * sr - pvi * si + pr[i];
+    pvi = pvr * si + pvi * sr + pi[i];
+    pvr = t;
+    qr[i] = pvr;
+    qi[i] = pvi;
+  }
+  pvri[0] = pvr;
+  pvri[1] = pvi;
 }
 
-var cauchy = require('./cauchy');
-var noshft = require('./noshft');
+function calct( nn, sr, si, hr, hi, qhr, qhi, pvri, tri ) {
+  // Computes t = -P(s)/H(s)
+  // Returns 
+
+  var bool, tmp;
+  var n = nn - 1;
+  var hvri = new Float64Array(2);
+
+  polyev( n, sr, si, hr, hi, qhr, qhi, hvri );
+
+  var m1 = Math.sqrt(hvri[0]*hvri[0]+hvri[0]*hvri[0]);
+  var m2 = Math.sqrt(hr[n-1]*hr[n-1]+hi[n-1]*hi[n-1]);
+  bool = (m1 <= 1e-15 * m2);
+
+  if( ! bool ) {
+    tmp = hvri[0]*hvri[0] + hvri[1]*hvri[1];
+    tri[0] = - ( pvri[0]*hvri[0] + pvri[1]*hvri[1] ) / tmp;
+    tri[1] = - ( pvri[1]*hvri[0] - pvri[0]*hvri[1] ) / tmp;
+    return bool;
+  }
+
+  tri[0] = 0;
+  tri[1] = 0;
+
+  return bool;
+}
+
+function nexth( nn, bool, qhr, qhi, qpr, qpi, hr, hi, tri ) {
+  // Calculates the next shifted H polynomial
+  // return true if H(s) is essentially zero
+  var t1, t2, j;
+  var n = nn - 1;
+  
+  if( ! bool ) {
+    for(j=1; j<n; j++) {
+      t1 = qhr[j-1];
+      t2 = qhi[j-1];
+      hr[j] = tri[0] * t1 - tri[1] * t2 + qpr[j];
+      hi[j] = tri[0] * t2 + tri[1] * t1 + qpi[j];
+    }
+    hr[0] = qpr[0];
+    hi[0] = qpi[0];
+    return;
+  }
+
+  // If H(s) is zero, replace h with qh:
+  for(j=1; j<n; j++) {
+    hr[j] = qhr[j-1];
+    hi[j] = qhi[j-1];
+  }
+  hr[0] = 0;
+  hi[0] = 0;
+}
+
+function errev ( nn, qr, qi, ms, mp ) {
+  // Bounds the error in evaluating the polynomial by Horner recurrence
+  // qr, qi: the partial sums
+  // ms: modulus of the point
+  // mp: modulus of the polynomial value
+  // are, mre: error bounds on complex addition and multiplication
+
+  var e, i;
+  var are = 1.1e-16;
+  var mre = 3.11e-16;
+
+  e = Math.sqrt(qr[0]*qr[0]+qi[0]*qi[0]) * mre / (are + mre);
+  for(i=0;i<nn;i++) {
+    e = e * ms + Math.sqrt(qr[i]*qr[i]+qi[i]*qi[i]);
+  }
+  return e * (are + mre) - mp * mre;
+}
+
+function cauchy (nn, pt, q ) {
+  // Cauchy computs a lower bound on the moduli ofthe zeros of a polynomial.
+  // pt is the modulus of the coefficients.
+  //
+  // The lower bound of the modulus of the zeros is given by the roots of the polynomial:
+  //
+  //   n         n-1
+  //  z  + |a | z    + ... + |a   | z - |a |
+  //         1                 n-1        n
+  //
+  var x, dx, df, i, n, xm, f;
+
+  // The sign of the last coefficient is reversed:
+  pt[nn-1] = -pt[nn-1];
+
+  // Compute upper estimate of bound:
+  n = nn - 1;
+  x = Math.exp((Math.log(-pt[nn-1]) - Math.log(pt[0])) / n);
+
+  if( pt[n-1] !== 0 ) {
+    xm = - pt[nn-1] / pt[n-1];
+    if( xm < x ) {
+      x = xm;
+    }
+  }
+
+  // Chop the interval (0,x) until f <= 0
+  while( true ) {
+    xm = x * 0.1;
+    f = pt[0];
+    for(i=1; i<nn; i++) {
+      f = f * xm + pt[i];
+    }
+    if( f > 0 ) {
+      x = xm;
+    } else {
+      break;
+    }
+  }
+  dx = x;
+
+  // Do newton iteration until x converges to two decimal places
+  while( Math.abs(dx/x) > 0.005 ) {
+    q[0] = pt[0];
+    for(i=1; i<nn; i++) {
+      q[i] = q[i-1] * x + pt[i];
+    }
+    f = q[nn-1];
+    df = q[0];
+    for(i=1; i<n; i++) {
+      df = df * x + q[i];
+    }
+    dx = f / df;
+    x -= dx;
+  }
+
+  return x;
+}
+
+function noshft (l1, nn, hr, hi, pr, pi) {
+  var i, j, jj, nm1, n, tr, ti;
+  var xni, t1, t2, tmp;
+
+  //console.log('begin stage 1');
+
+  n = nn - 1;
+  nm1 = n - 1;
+
+  // From Eqn. 9.3 for the 'scaled recurrence', calculate
+  //
+  //  _ (0)        1
+  //  H    (z)  =  - P' (z)
+  //               n
+  //
+  // In my copy of the paper, the 'P' appears to be missing a prime. Since the
+  // leading coefficient is constrained to be 1, this makes H a monic polynomial.
+  for(i=0; i<n; i++) {
+    xni = nn - i - 1;
+    hr[i] = xni * pr[i] / n;
+    hi[i] = xni * pi[i] / n;
+  }
+
+  for(jj=0; jj<l1; jj++) {
+    //console.log('No shift iteration #',jj+1,'H =',showPolyPython(n,hr,hi));
+
+    // Compare the trailing coefficient of H to that of P:
+    //console.log( Math.sqrt(hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1]));
+    //console.log( Math.sqrt(pr[n]*pr[n]+pi[n]*pi[n]));
+    if( hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1] > 1e-30 * pr[n]*pr[n]+pi[n]*pi[n] ) {
+
+      // t = - p[n] / h[nm1]
+      tmp = - (hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1]);
+      tr = ( pr[n]*hr[nm1]+pi[n]*hi[nm1] ) / tmp;
+      ti = ( pi[n]*hr[nm1]-pr[n]*hi[nm1] ) / tmp;
+
+      // Calculate the new polynomial using the horner recurrence:
+      for(j=nm1; j>0; j--) {
+        t1 = hr[j-1];
+        t2 = hi[j-1];
+        hr[j] = tr * t1 - ti * t2 + pr[j];
+        hi[j] = tr * t2 + ti * t1 + pi[j];
+      }
+      hr[0] = pr[0];
+      hi[0] = pi[0];
+
+    } else {
+      //console.log('edge case');
+
+      // If the constant term is essentially zero, shift h coefficients
+      for(i=n-1; i>0; i--) {
+        //console.log("shifting",i);
+        hr[i] = hr[i-1];
+        hi[i] = hi[i-1];
+      }
+      hr[0] = 0;
+      hi[0] = 0;
+      //console.log('shifted H =',showPolyPython(n,hr,hi));
+    }
+  }
+}
+
+function vrshft (l3, nn, zri, sri, hr, hi, pr, pi, qpr, qpi, qhr, qhi, shr, shi, pvri, tri) {
+
+  var mp, ms, omp, relstp, r1, r2, tp, bool, i, j;
+  
+  //console.log('begin stage 3');
+
+  var conv = false;
+  var b = false;
+
+  sri[0] = zri[0];
+  sri[1] = zri[1];
+  var eta = 1.1e-16;
 
 
-var cpoly = function cpoly ( opr, opi, degree ) {
-  var i, j, bnd;
+  // Main loop for stage three
+  for(i=0; i<l3; i++) {
+    //console.log('variable shift iteration #',i+1, ', H =',showPolyPython(nn-1,hr,hi));
+
+    // Evaluate P at s and test for convergence
+    polyev( nn, sri[0], sri[1], pr, pi, qpr, qpi, pvri );
+    mp = Math.sqrt( pvri[0]*pvri[0] + pvri[1]*pvri[1] );
+    ms = Math.sqrt( sri[0]*sri[0] + sri[1]*sri[1] );
+    var err = errev(nn, qpr, qpi, ms, mp);
+    //console.log('compare mp=',mp,' to err=',err);
+    if( mp < 20 * err ) {
+      // Polynomial value is smaller in value than a bound on the error in evaluating P,
+      // terminate the iteration
+      conv = true;
+      zri[0] = sri[0];
+      zri[1] = sri[1];
+      //console.log('converged to',zri[0],'+',zri[1]+'i');
+      return conv;
+    }
+
+    if( i !== 0 ) {
+      if( ! ( b || mp < omp || relstp >= 0.5 ) ) {
+        // Iteration has stalled. Probably a cluster of zeros. Do 5 fixed
+        // shift steps into the cluster to force one zero to dominate.
+        tp = relstp;
+        b = true;
+        if( relstp < eta ) {
+          tp = eta;
+        }
+        r1 = Math.sqrt(tp);
+        r2 = sri[0] * (1+r1) - sri[1] * r1;
+        sri[1] = sri[0] * r1 + sri[1] * (1+r1);
+        sri[0] = r2;
+        polyev( nn, sri[0], sri[1], pr, pi, qpr, qpi, pvri );
+        for(j=1; j<5; j++) {
+          calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+          nexth( nn, bool, qhr, qhi, qpr, qpi, hr, hi, tri );
+        }
+        omp = Infinity;
+      }
+      if( mp * 0.1 > omp ) {
+        return conv;
+      }
+    }
+    omp = mp;
+
+    bool = calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+    bool = nexth( nn, bool, qhr, qhi, qpr, qpi, hr, hi, tri );
+    bool = calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+    if( ! bool ) {
+      relstp = Math.sqrt(tri[0]*tri[0]+tri[1]*tri[1]) / Math.sqrt(sri[0]*sri[0]+sri[1]*sri[1]);
+      sri[0] += tri[0];
+      sri[1] += tri[1];
+    }
+  }
+  return conv;
+}
+
+function fxshft (l2, nn, zri, sri, hr, hi, pr, pi, qpr, qpi, qhr, qhi, shr, shi, pvri, tri) {
+  var i, j, n, conv;
+  var otr, oti, bool, svsr, svsi;
+
+  n = nn - 1;
+
+  //console.log('begin stage 2');
+
+  //console.log('np.polyval(',showPolyPython(nn,pr,pi)+', '+sr+'+'+si+'j)');
+  //console.log('np.polyval(',showPolyPython(n,hr,hi)+', '+sr+'+'+si+'j)');
+
+  // Evaluate P at s:
+  polyev( nn, sri[0], sri[1], pr, pi, qpr, qpi, pvri );
+  var test = true;
+  var pasd = false;
+
+  // Calculate first t = -P(s)/H(s):
+  bool = calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+  zri[0] = sri[0] + tri[0];
+  zri[1] = sri[1] + tri[1];
+
+  // Main loop for one second stage step
+  for(j=0; j<l2; j++) {
+    //console.log('fixed shift iteration #',j+1,' H =',showPolyPython(n,hr,hi));
+    otr = tri[0];
+    oti = tri[1];
+
+    // Compute next h polynomial and new t:
+    nexth( nn, bool, qhr, qhi, qpr, qpi, hr, hi, tri );
+    bool = calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+    zri[0] = sri[0] + tri[0];
+    zri[1] = sri[1] + tri[1];
+
+
+    // Test for convergence unless stage 3 has failed once or this is the last H polynomial
+    if( ! ( bool || !test || j === l2-1) ) {
+      var tmpi = tri[0] - otr;
+      var tmpr = tri[1] - oti;
+      var m1 = Math.sqrt(tmpr*tmpr + tmpi*tmpi);
+      var m2 = Math.sqrt(zri[0]*zri[0] + zri[1]*zri[1]);
+      if( m1 < 0.5 * m2 ) {
+        if( pasd ) {
+          //console.log('weak convergence passed twice');
+          // The weak convergence test has been passed twice, start the third stage
+          // iteration, after saving the current H polynomial and shift
+          for(i=0; i<n; i++) {
+            shr[i] = hr[i];
+            shi[i] = hi[i];
+          }
+          svsr = sri[0];
+          svsi = sri[1];
+
+          conv = vrshft( 10, nn, zri, sri, hr, hi, pr, pi, qpr, qpi, qhr, qhi, shr, shi, pvri, tri );
+          if( conv ) {
+            return conv;
+          }
+
+          // The iteration failed to converge. Turn off testing and restore H, S, PV, and T.
+          //console.log('iteration failed to converge. Turn off testing & restore H, S, PV, T');
+          test = false;
+          for(i=0; i<n; i++) {
+            hr[i] = shr[i];
+            hi[i] = shi[i];
+          }
+          sri[0] = svsr;
+          sri[1] = svsi;
+          polyev( nn, sri[0], sri[1], pr, pi, qpr, qpi, pvri );
+          bool = calct( nn, sri[0], sri[1], hr, hi, qhr, qhi, pvri, tri );
+          continue;
+        } 
+        pasd = true;
+      } else {
+        pasd = false;
+      }
+    }
+  }
+
+  conv = vrshft( 10, nn, zri, sri, hr, hi, pr, pi, qpr, qpi, qhr, qhi, shr, shi, pvri, tri );
+
+  return conv;
+}
+
+var cpoly = function cpoly ( opr, opi ) {
+  var i, bound, xxx, conv, cnt1, cnt2, tmp, idnn2;
+
+  if( opi === undefined ) {
+    opi = new Float64Array( opr.length );
+  }
+
+  if( opr.length !== opi.length ) {
+    throw new TypeError('cpoly: error: real/complex polynomial coefficient input length mismatch');
+  }
+
+  var degree = opr.length - 1;
 
   // Initialization of constants
-  var xx = 0.70710678,
+  var xx = 0.7071067811865475,
       yy = -xx,
-      cosr = -.060756474,
-      sinr = .99756405,
+      cosr = -0.06975647374412534,
+      sinr = 0.9975640502598242,
       nn = degree + 1;
 
   // Output:
@@ -70,11 +445,17 @@ var cpoly = function cpoly ( opr, opi, degree ) {
       qhr = new Float64Array(nn),
       qhi = new Float64Array(nn),
       shr = new Float64Array(nn),
-      shi = new Float64Array(nn);
+      shi = new Float64Array(nn),
+      zri = new Float64Array(2), // for pasing around zeros since js doesn't do by reference;
+      pvri = new Float64Array(2),  // for passing around the polynomial value, reason = ditto
+      tri = new Float64Array(2),   // for passing around T = -P(S)/H(S)
+      sri = new Float64Array(2);   // for passing around current s
   
+  //console.log('degree =',degree);
+  //console.log('nn =',nn);
   // Remove the zeros at the origin if any
   while( opr[nn] === 0 && opi[nn] === 0 ) {
-    idnn2 = degree - nn + 2;
+    idnn2 = degree - nn + 1;
     zeror[idnn2] = 0;
     zeroi[idnn2] = 0;
     nn--;
@@ -91,331 +472,63 @@ var cpoly = function cpoly ( opr, opi, degree ) {
   // or small coefficients. Caveat emptor.
 
   // Start the algorithm for one zero
+  while( nn > 2 ) {
+
+    // Calculate bound, a lower bound on the modulus of the zeros:
+    for(i=0; i<nn; i++) {
+      shr[i] = Math.sqrt(pr[i]*pr[i] + pi[i]*pi[i]);
+    }
+    bound = cauchy( nn, shr, shi);
+
+    // Outer loop to control two major passes with different sequences of shifts
+    for(cnt1=0; cnt1<2; cnt1++) {
+      //console.log("BEGIN OUTER LOOP");
+
+      noshft(5, nn, hr, hi, pr, pi);
+
+      // Inner loop to select a shift
+      for(cnt2=1; cnt2<9; cnt2++) {
+        //console.log("BEGIN INNER LOOP");
+
+        // rotate shift angle xx and yy:
+        xxx = cosr * xx - sinr * yy;
+        yy = sinr * xx + cosr * yy;
+        xx = xxx;
+
+        // Calculate the new shift:
+        sri[0] = bound * xx;
+        sri[1] = bound * yy;
+
+        conv = fxshft( 10*cnt2, nn, zri, sri, hr, hi, pr, pi, qpr, qpi, qhr, qhi, shr, shi, pvri, tri );
+
+        if( conv ) {
+          //console.log('MAIN LOOP CONVERGENCE. STORE ZERO');
+          idnn2 = degree - nn + 1;
+          zeror[idnn2] = zri[0];
+          zeroi[idnn2] = zri[1];
+          nn--;
+          //console.log('nn-- = ',nn);
+
+          for(i=0; i<nn; i++) {
+            pr[i] = qpr[i];
+            pi[i] = qpi[i];
+          }
+          cnt1 = 3; // exit from the cnt2 loop also
+          break;
+        }
+      }
+    }
+  }
+
   if( nn <= 2 ) {
+    //console.log('END LOOP CONVERGENCE. STORE ZERO');
     // Calculate the final zero and return ( - p[1] / p[0] ):
-    tmp = pr[1]*pr[1] + pi[1]*pi[1];
+    tmp = pr[0]*pr[0] + pi[0]*pi[0];
     zeror[degree-1] = - ( pr[1]*pr[0] + pi[1]*pi[0] ) / tmp;
     zeroi[degree-1] = - ( pi[1]*pr[0] - pr[1]*pi[0] ) / tmp;
-    return;
   }
 
-  // Calculate bnd, a lower bound on the modulus of the zeros:
-  for(i=0; i<nn; i++) {
-    shr[i] = Math.sqrt(pr[i]*pr[i] + pi[i]*pi[i]);
-  }
-  bnd = cauchy( nn, shr, shi);
-
-  console.log('bnd = ',bnd);
-
-  // Outer loop to control two major passes with different sequences of shifts
-  //for(i=0; i<2; i++) {
-
-    noshft(50, nn, hr, hi, pr, pi);
-
-  //}
-
-}
-
-module.exports = cpoly;
-
-/*
-// Differentiates in place. Understood that the last entry is
-// cut off (but still exists in memory) and that the order of
-// the polynomial is reduced by 1.
-function differentiate( n, Pr, Pi, Ppr, Ppi ) {
-  var p,i;
-  for(i=n-2; i>=0; i--) {
-    p = n-i-1;
-    Ppr[i] = Pr[i] * p;
-    Ppi[i] = Pi[i] * p;
-  }
-}
-
-
-// The lower bound of the modulus of the zeros is given by the roots of the polynomial
-//
-//   n         n-1
-//  z  + |a | z    + ... + |a   | z - |a |
-//         1                 n-1        n
-//
-function lowerRootBound(n, Pr, Pi, w) {
-  var tol = 1e-8;
-  var maxiter = 15;
-  var i=0, dx=Infinity, iter=0, f, fp, betaAccum, xn, dx;
-  // An initial guess (will always work, I'm pretty sure, since the poly is
-  // strictly increasing in the right half-plane):
-  var x = 2.0;
-
-  // Set up the coefficients so that the first coefficient is, by definition, one:
-  var w0 = Math.sqrt(Pr[0]*Pr[0] + Pi[0]*Pi[0]);
-  w[0] = 1;
-  for(var i=1; i<n; i++) {
-    w[i] = Math.sqrt(Pr[i]*Pr[i] + Pi[i]*Pi[i]) / w0;
-  }
-
-  while(Math.abs(dx) > tol) {
-    // Calculate the function and its derivative in one go so that we don't
-    // have to calculate powers of x twice for no reason:
-    f = - w[n-1]; // <-- trailing term is inverted
-    fp =  w[n-2];
-    xn = x;
-    for(i=n-2; i>=1; i--) {
-      f += w[i] * xn;
-      fp += (n-i) * w[i-1] * xn;
-      xn *= x;
-    }
-    f += w[i] * xn;
-    dx = -f/fp;
-    x += dx;
-
-    if( ++iter >= maxiter ) {
-      return 0;
-    }
-  }
-  return x;
-}
-
-
-// Compute the no-shift iteration in-place wrt H:
-//
-//                                   (l)
-//    (l+1)        1  /  (l)        H   (0)      \
-//   H     (z)  =  - (  H   (z)  -  ------- P(z)  )
-//                 z  \              P(0)        /
-//
-// Last coefficient vanishes, so we're left with a polynomial
-// of order n-2, the same as H.
-//
-// P is the polynomial order n+1. H is the (pre-initialized) polynomial order n. Jenkins and
-// Traub state that convergence criteria exist, but in general five iterations is sufficient
-// to make the small roots stand out a bit more.
-function noShiftIteration( n, Pr, Pi, Hr, Hi ) {
-  var Pr0, Pi0, Hr0, Hi0, tmp1, tmp2, HPr, HPi, i, H0m;
-
-  // Pull P(0):
-  Pr0 = Pr[n-1];
-  Pi0 = Pi[n-1];
-
-  // Calculate coefficient H^(l)(0) / P(0):
-  tmp1 = Pr0*Pr0 + Pi0*Pi0;
-  HPr = (Hr[n-2] * Pr0 + Hi[n-2] * Pi0) / tmp1;
-  HPi = (Hi[n-2] * Pr0 - Hr[n-2] * Pi0) / tmp1;
-
-  // Calculate the new polynomial H^(l+1) in place:
-  for(i=n-2; i>=1; i--) {
-    Hr[i] = Hr[i-1] - HPr * Pr[i] + HPi * Pi[i];
-    Hi[i] = Hi[i-1] - HPr * Pi[i] - HPi * Pr[i];
-  }
-  Hr[0] = - (HPr * Pr[0] - HPi * Pi[0]);
-  Hi[0] = - (HPr * Pi[0] + HPi * Pr[0]);
-  
-  // For production: Normalize the answer so that it doesn't diverge
-  H0m = Math.sqrt(Hr[0]*Hr[0] + Hi[0]*Hi[0]);
-  for(i=0; i<n-1; i++) {
-    Hr[i] /= H0m;
-    Hi[i] /= H0m;
-  }
-
-  // For debugging: Normalize the polynomial to H0=1 so that it's easy to see convergence
-  Hr0 = Hr[0];
-  Hi0 = Hi[0];
-  H0m = Hi0*Hi0 + Hr0*Hr0;
-  for(i=0; i<n; i++) {
-    tmp1 = Hr[i];
-    Hr[i] = (Hr0*tmp1 + Hi0*Hi[i]) / H0m;
-    Hi[i] = (Hr0*Hi[i] - Hi0*tmp1) / H0m;
-  }
-}
-
-
-// Compute a fixed-shift iteration in-place wrt H:
-//
-//                                        (l)
-//    (l+1)          1     /  (l)        H   (s)      \
-//   H     (z)  =  -----  (  H   (z)  -  ------- P(z)  )
-//                 z - s   \              P(s)        /
-//
-function fixedShiftIteration( n, Pr, Pi, Hr, Hi, sr, si ) {
-  var Prs, Pis, Hrs, His, tmp1, tmp2, HPr, HPi, i, zr, zi, ar, ai, H0m, Hr0, Hi0;
-
-  // Calculate H^(l)(s) and P(s) in tandem:
-  Prs = Pr[n-1];
-  Pis = Pi[n-1];
-  Hrs = Hr[n-2];
-  His = Hi[n-2];
-  zr = sr;
-  zi = si;
-  for(i=n-2; i>0; i--) {
-    // P += a_i * z^(n-i):
-    Prs += Pr[i]*zr - Pi[i]*zi;
-    Pis += Pr[i]*zi + Pi[i]*zr;
-
-    // H += a_(i-1) * z^(n-i):
-    Hrs += Hr[i-1]*zr - Hi[i-1]*zi;
-    His += Hr[i-1]*zi + Hi[i-1]*zr;
-
-    // Multiply by z:
-    tmp1 = zr;
-    zr = zr*sr - zi*si;
-    zi = zi*sr + tmp1*si;
-  }
-
-  // One leftover term for P since it's a degree larger:
-  Prs += Pr[0]*zr - Pi[0]*zi;
-  Pis += Pr[0]*zi + Pi[0]*zr;
-
-  // Calculate coefficient H^(l)(s) / P(s):
-  tmp1 = Prs*Prs + Pis*Pis;
-  HPr = (Hrs * Prs + His * Pis) / tmp1;
-  HPi = (His * Prs - Hrs * Pis) / tmp1;
-
-  // Calculate the new polynomial H^(l+1) * (z-s) in place:
-  for(i=n-2; i>=1; i--) {
-    Hr[i] = Hr[i-1] - HPr * Pr[i] + HPi * Pi[i];
-    Hi[i] = Hi[i-1] - HPr * Pi[i] - HPi * Pr[i];
-  }
-  Hr[0] = - (HPr * Pr[0] - HPi * Pi[0]);
-  Hi[0] = - (HPr * Pi[0] + HPi * Pr[0]);
-
-  // Deflate by the root z-s, taking into account the fact that, by definition,
-  // there's no remainder. Note that there's no change in the leading coefficient
-  // whether or not it's equal to 1 because it just loses a z.
-  for(i=1; i<n-1; i++) {
-    Hr[i] += sr*Hr[i-1] - si*Hi[i-1];
-    Hi[i] += sr*Hi[i-1] + si*Hr[i-1];
-  }
-
-  // For production: Normalize the answer so that it doesn't diverge
-  H0m = Math.sqrt(Hr[0]*Hr[0] + Hi[0]*Hi[0]);
-  for(i=0; i<n-1; i++) {
-    Hr[i] /= H0m;
-    Hi[i] /= H0m;
-  }
-
-  // For debugging: Normalize the polynomial to H0=1 so that it's easy to see convergence
-  Hr0 = Hr[0];
-  Hi0 = Hi[0];
-  H0m = Hi0*Hi0 + Hr0*Hr0;
-  for(i=0; i<n; i++) {
-    tmp1 = Hr[i];
-    Hr[i] = (Hr0*tmp1 + Hi0*Hi[i]) / H0m;
-    Hi[i] = (Hr0*Hi[i] - Hi0*tmp1) / H0m;
-  }
-}
-
-function evalPH( n, Pr, Pi, Hr, Hi, HP, sr, si ) {
-  var zr, zi, i;
-  // Calculate H^(l)(s) and P(s) in tandem:
-  Prs = Pr[n-1];
-  Pis = Pi[n-1];
-  Hrs = Hr[n-2];
-  His = Hi[n-2];
-  zr = sr;
-  zi = si;
-  for(i=n-2; i>0; i--) {
-    // P += a_i * z^(n-i):
-    Prs += Pr[i]*zr - Pi[i]*zi;
-    Pis += Pr[i]*zi + Pi[i]*zr;
-
-    // H += a_(i-1) * z^(n-i):
-    Hrs += Hr[i-1]*zr - Hi[i-1]*zi;
-    His += Hr[i-1]*zi + Hi[i-1]*zr;
-
-    // Multiply by z:
-    tmp1 = zr;
-    zr = zr*sr - zi*si;
-    zi = zi*sr + tmp1*si;
-  }
-}
-
-// Takes polynomial coefficients of format:
-//
-//       n         n+1
-// a  * z   +  a  z    + ... + a   z  +  a
-//  0           1               n-1       n
-//
-var polynomialRoots = function polynomialRoots( Pr, Pi ) {
-  var i,j;
-
-  if( Pi === undefined ) {
-    Pi = new Float64Array(Pr.length);
-  }
-
-  if( Pr.length !== Pi.length ) {
-    throw new TypeError("polynomialRoots: error: real and complex coefficient array lengths must be equal");
-  }
-
-  var n = Pr.length;
-  
-  // Iteration arrays and work arrays:
-  var Hr = new Float64Array(n-1);
-  var Hi = new Float64Array(n-1);
-  var W = new Float64Array(n);
-
-  // Initialize the stage one iteration with H(z) := P'(z)
-  differentiate( n, Pr, Pi, Hr, Hi );
-
-  var M = 3;
-  var L = 5;
-  var K = 30;
-  // Five iterations of stage 1:
-  for(i=0; i<M; i++) {
-    noShiftIteration( n, Pr, Pi, Hr, Hi );
-    console.log('H^(' + (i+1) + ') =',showPolyPython(n-1,Hr,Hi));
-  }
-
-  // Switch from stage 1 to stage 2. That means calculating a shift, which means taking the
-  // lower bound on the zero and rotating it randomly about a circle in the complex plane:
-  var lowerBound = lowerRootBound( n, Pr, Pi, W );
-  var th = Math.random() * 2 * Math.PI;
-  var sr = lowerBound * Math.cos(th);
-  var si = lowerBound * Math.sin(th);
-
-  console.log('initial shift =',sr,si);
-
-  for(i=M; i<L; i++) {
-    fixedShiftIteration( n, Pr, Pi, Hr, Hi, sr, si );
-    console.log('H^(' + (i+1) + ') =',showPolyPython(n-1,Hr,Hi));
-  }
-
-  // Switch from stage 2 to stage 3. That means calculating a shift, which means taking the
-
-  var zr, zi, Prs, Pis, Hrs, His, tmp1;
-  for(i=L; i<K; i++) {
-
-    // Calculate H^(l)(s) and P(s) in tandem:
-    Prs = Pr[n-1];
-    Pis = Pi[n-1];
-    Hrs = Hr[n-2];
-    His = Hi[n-2];
-    zr = sr;
-    zi = si;
-    for(j=n-2; j>0; j--) {
-      // P += a_i * z^(n-j):
-      Prs += Pr[j]*zr - Pi[j]*zi;
-      Pis += Pr[j]*zi + Pi[j]*zr;
-
-      // H += a_(j-1) * z^(n-j):
-      Hrs += Hr[j-1]*zr - Hi[j-1]*zi;
-      His += Hr[j-1]*zi + Hi[j-1]*zr;
-
-      // Multiply by z:
-      tmp1 = zr;
-      zr = zr*sr - zi*si;
-      zi = zi*sr + tmp1*si;
-    }
-
-    // Update the shift for s:
-    tmp1 = Hrs*Hrs + His*His;
-    sr -= (Hrs*Prs + His*Pis) / tmp1;
-    si -= (Hrs*Pis - His*Prs) / tmp1;
-
-    console.log('updated shift =',sr,si);
-
-    fixedShiftIteration( n, Pr, Pi, Hr, Hi, sr, si );
-    console.log('H^(' + (i+1) + ') =',showPolyPython(n-1,Hr,Hi));
-  }
-
+  return [zeror, zeroi];
 };
 
-module.exports = polynomialRoots; */
+module.exports = cpoly;

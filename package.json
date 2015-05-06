@@ -1,29 +1,30 @@
 {
-  "name": "poly-deflate",
+  "name": "poly-roots",
   "version": "0.0.0",
-  "description": "Factor out a root to deflate a polynomial",
+  "description": "Find all roots of a polynomial using the Jenkins-Traub method",
   "main": "index.js",
   "author": "Ricky Reusser",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {
-    "test": "node test/**"
+    "test": "node test/**",
+    "lint": "jshint *.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/scijs/poly-deflate.git"
+    "url": "git://github.com/scijs/poly-roots.git"
   },
   "keywords": [
     "polynomial",
     "scijs",
-    "calculus",
+    "roots",
     "algebra",
     "math"
   ],
   "dependencies": {
-    "ndarray": "^1.0.16"
   },
   "devDependencies": {
+    "jshint": "^2.7.0",
     "tape": "^4.0.0"
   }
 }
