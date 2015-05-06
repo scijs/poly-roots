@@ -48,5 +48,5 @@ var r1 = roots([1,2,-3]);
 var r2 = roots([1,-4,1,6],[0,-1,1,2]);
 ```
 
-# Credits
+## Credits
 (c) 2015 Ricky Reusser. MIT License
