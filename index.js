@@ -433,18 +433,18 @@ var cpoly = function cpoly ( opr, opi ) {
       nn = degree + 1;
 
   // Output:
-  var zeror = new Float64Array(nn),
-      zeroi = new Float64Array(nn);
+  var zeror = new Float64Array(degree),
+      zeroi = new Float64Array(degree);
 
   // Allocate arrays
   var pr = new Float64Array(nn),
       pi = new Float64Array(nn),
-      hr = new Float64Array(nn),
-      hi = new Float64Array(nn),
+      hr = new Float64Array(degree),
+      hi = new Float64Array(degree),
       qpr = new Float64Array(nn),
       qpi = new Float64Array(nn),
-      qhr = new Float64Array(nn),
-      qhi = new Float64Array(nn),
+      qhr = new Float64Array(degree),
+      qhi = new Float64Array(degree),
       shr = new Float64Array(nn),
       shi = new Float64Array(nn),
       zri = new Float64Array(2), // for pasing around zeros since js doesn't do by reference;
