@@ -57,6 +57,6 @@ For a blazing fast variant that might struggle in corner cases (like closely-spa
 
 ## Credits
 
-Since this inherits a lot from `cpoly.f90` and `cpoly.f90` in turn inherits from CACM 419, I'm afraid that it may be subject to the [ACM Software License Agreement](http://www.acm.org/publications/policies/softwarecrnotice)
+Since this inherits a lot from `cpoly.f90` and `cpoly.f90` in turn inherits from CACM 419, I'm afraid that it may be subject to the [ACM Software License Agreement](http://www.acm.org/publications/policies/softwarecrnotice). :(
 
 (c) 2015 Ricky Reusser. MIT License
