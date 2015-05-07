@@ -13,17 +13,19 @@ It uses the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93
 
 **The good**:
 
-- It's reasonably fast — maybe [a few times faster than the companion matrix method](http://eprints.maths.ox.ac.uk/16/1/mekwi.pdf)
+- It's reasonably fast
 - It's numerically stable
 - Memory usage is linear
 - It benefits from the experimentation of the people who originally sat down and came up with a great implementation
 - No dependencies
 
 **The bad**:
-- It's been translated by hand. Probably error prone.
-- The convergence criteria need a bit of work. I glossed over a couple subroutines that juggle some operations in order to prevent underflow errors, so I suspect the error estimates relative to machine epsilon aren't stricly accurate. I feel like it's losing a bit more precision than I'd expect though.
+- It's been translated by hand.
+- The convergence criteria need a bit of work. I glossed over a couple subroutines that juggle some operations in order to prevent underflow errors, so I suspect the error estimates relative to machine epsilon aren't stricly accurate.
 - It can maybe be translated better and more effectively via f2c + emscripten.
 - The speed can be cut in half for polynomials with real coefficients by using the [rpoly.f90](http://jblevins.org/mirror/amiller/rpoly.f90) variant
+
+You can go do some research about good root-finders, but for a quick rundown of what you have to work with if you want to stick with JavaScript, see a [quick benchmark](https://github.com/rreusser/scijs-polynomial-roots-comparison).
 
 ## Usage
 
@@ -50,7 +52,8 @@ var r2 = roots([1,-4,1,6],[0,-1,1,2]);
 ```
 
 ## See also
-For the companion roots version that determines roots by solution of an eigenvalue problem, see [companion-roots](https://github.com/scijs/companion-roots).
+For the companion roots version that determines roots by solution of an eigenvalue problem (via numeric.js), see [companion-roots](https://github.com/scijs/companion-roots).
+For a blazing fast variant that might struggle in corner cases (like closely-spaced roots), see [durand-kerner](https://github.com/scijs/durand-kerner).
 
 ## Credits
 (c) 2015 Ricky Reusser. MIT License
