@@ -220,11 +220,12 @@ function noshft (l1, nn, hr, hi, pr, pi) {
 
   for(jj=0; jj<l1; jj++) {
     //console.log('No shift iteration #',jj+1,'H =',showPolyPython(n,hr,hi));
+    //console.log('No shift iteration #',jj+1,'P =',showPolyPython(n,pr,pi));
 
     // Compare the trailing coefficient of H to that of P:
     //console.log( Math.sqrt(hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1]));
     //console.log( Math.sqrt(pr[n]*pr[n]+pi[n]*pi[n]));
-    if( hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1] > 1e-30 * pr[n]*pr[n]+pi[n]*pi[n] ) {
+    if( (hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1]) > 1e-30 * (pr[n]*pr[n]+pi[n]*pi[n]) ) {
 
       // t = - p[n] / h[nm1]
       tmp = - (hr[nm1]*hr[nm1]+hi[nm1]*hi[nm1]);
@@ -252,7 +253,7 @@ function noshft (l1, nn, hr, hi, pr, pi) {
       }
       hr[0] = 0;
       hi[0] = 0;
-      //console.log('shifted H =',showPolyPython(n,hr,hi));
+      //console.log('shifted H =',showPolyPython(nm1,hr,hi));
     }
   }
 }
