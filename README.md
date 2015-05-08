@@ -3,6 +3,8 @@
 
 Find all [roots](http://en.wikipedia.org/wiki/Root_of_a_function) of a [polynomial](http://en.wikipedia.org/wiki/Polynomial) using the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm). In other words, it [factorizes the polynomial](http://en.wikipedia.org/wiki/Factorization_of_polynomials) over the complex numbers.
 
+N.B.: I fear I strayed too far toward translating cpoly while trying to understand the algorithm. It's similar enough to likely be covered under the original [ACM Software License Agreement](http://www.acm.org/publications/policies/softwarecrnotice). Sorry.
+
 ## Introduction
 
 This module factors a polynomial of the form 
