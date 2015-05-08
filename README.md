@@ -13,6 +13,8 @@ This module factors a polynomial of the form
 
 It uses the [Jenkins-Traub method](http://en.wikipedia.org/wiki/Jenkins%E2%80%93Traub_algorithm), and more specifically it's very nearly a line-by-line translation of the tried and true [cpoly.f90](http://jblevins.org/mirror/amiller/cpoly.f90). No really, it's almost a direct translation, taking some leeway in reworking goto statements into javascript. I started off with a pretty naive implementation of the original paper, [A three-stage variable shift iteration for polynomial zeros and its relation to generalized Ralyeigh iteration](http://octopus.library.cmu.edu/Collections/traub62/box00027/fld00056/bdl0004/doc0001/doc_27b56f4b1.pdf) by M. A. Jenkins and J. F. Traub, 1968, but there are some serious shortcuts and simplifications you can take if you stop and think about what you're doing. So I gave up cleaning up and refactoring my own version and reworked an existing implementation into JavaScript.
 
+For a comparison to other SciJS poly root methods, see: [scijs polynomial roots comparison](https://github.com/rreusser/scijs-polynomial-roots-comparison).
+
 **The good**:
 
 - It's reasonably fast
