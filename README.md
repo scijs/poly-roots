@@ -1,4 +1,5 @@
+# poly-roots
 
-## Credits
+This module has been deprecated in favor of [durand-kerner](https://github.com/scijs/durand-kerner), which is a faster and more robust implementation all around.
 
-Since this inherits a lot from `cpoly.f90` and `cpoly.f90` in turn is an update of the original code from CACM 419, I'm afraid that it may be subject to the [ACM Software License Agreement](http://www.acm.org/publications/policies/softwarecrnotice) which, in short, grants to you a royalty-free, nonexclusive right to execute, copy, modify and distribute both the binary and source code solely for academic, research and other similar noncommercial uses. :(
+See [history](https://github.com/scijs/poly-roots/blob/930c0b5eff0d4ca37d8f94f075fa75e27197d621/README.md) for a more complete readme.
